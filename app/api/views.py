@@ -125,7 +125,7 @@ def Incident():
             
 @api_bp.route("/parking")
 def Parking():
-    url_parking = 'https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/ParkingEntranceExit/City/NewTaipei?format=JSON'
+    url_parking = 'https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/ParkingEntranceExit/City/Taipei?format=JSON'
     db = sqlite3.connect('app/db/sqlite.db')
     cursor = db.cursor()
     try:
