@@ -3,6 +3,7 @@ from flask import Flask, jsonify, make_response
 from collections import defaultdict
 import requests
 import json
+import re
 import sqlite3
 from . import api_bp
 from .comm import *
@@ -145,6 +146,26 @@ def Parking():
 @api_bp.route("/pp")
 def pp():
     return {"code":404}
+@api_bp.route("/oil")
+def oil():
+    url= "https://www.cpc.com.tw/historyprice.aspx?n=2890"
+    resp = requests.get(url)
+    m = re.search("var pieSeries = (.*);", resp.text)
+    jsonstr = m.group(0).strip('var pieSeries = ').strip(";")
+    j = json.loads(jsonstr)
+    #print(j)
+
+    mdic = defaultdict(list)
+    for record in reversed(j):
+        mdic[record["name"]].append({record["data"][0]['name']:record["data"][0]['y']})
+
+    res = []
+    for k, v in mdic.items():
+        res.append({"date":k, "92":v[0]['92 無鉛汽油'],  "95":v[1]['95 無鉛汽油'],  "98":v[2]['98 無鉛汽油'],  "super":v[3]['超級/高級柴油'],})
+
+    #print(mdic)
+    print(res)
+    return json.dumps(res, indent=4, ensure_ascii=False)
 
 
 
