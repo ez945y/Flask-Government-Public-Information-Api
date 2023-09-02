@@ -3,11 +3,11 @@ from flask import Flask, jsonify, make_response
 from collections import defaultdict
 import requests
 import json
-import re
 import sqlite3
 from . import api_bp
 from .comm import *
 from app.db import *
+import re
 
 
 @api_bp.route("/city")
@@ -44,7 +44,7 @@ def cityRoad(roadname):
     db = sqlite3.connect('app/db/sqlite.db')
     cursor = db.cursor()
     value_list = cursor.execute(f"SELECT DISTINCT RoadID, RoadName FROM CityRoad where RoadName like '{roadname}%' AND substr(RoadID,7,1) = 'A'  ").fetchall()
-    data = [{'RoadId':i[0],"RoadName" : i[1]} for i in value_list]
+    data = [{'RaodId':i[0],"RoadName" : i[1]} for i in value_list]
     try:
         db.close()
         return json.dumps(data, ensure_ascii = False)
@@ -165,7 +165,37 @@ def oil():
 
     #print(mdic)
     print(res)
-    return json.dumps(res, indent=4, ensure_ascii=False)
+    return res
+@api_bp.route("/wheather")
+def weather():
+    url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-061?Authorization=CWB-9451F1F8-364F-48A5-AEF6-60F3ACEBC9D7'
 
+    data = requests.get(url)   # 取得 JSON 檔案的內容為文字
+
+    res = []
+    data_json = data.json()    # 轉換成 JSON 格式
+    prohibit = ["WeatherDescription","PoP6h","AT","CI","RH","WD","WS","Td"]
+    for record in  data_json['records']['locations'][0]["location"]:
+        mdic = {}
+        mdic["locationName"] = record["locationName"]
+        for w in record["weatherElement"]:
+            if w["elementName"] in prohibit:continue
+            for idx, p in enumerate(w["time"]):
+                if idx >=4 and w["elementName"] == "PoP12h":break
+                if idx >=8 and w["elementName"] == "Wx":break
+                if idx >=8 and w["elementName"]=="AT":break
+                if idx >=8 and w["elementName"]=="T":break
+                if idx >=8 and w["elementName"]=="RH":break
+                if idx >=8 and w["elementName"]=="CI":break
+                if idx >=8 and w["elementName"]=="WS":break
+                if idx >=8 and w["elementName"]=="WD":break
+                if idx >=8 and w["elementName"]=="Td":break
+                tag = w["elementName"]+str(idx+1)
+                mdic[tag] = p["elementValue"][0]["value"]
+                
+        res.append(mdic)
+    print(res[0].items())
+    print(res) 
+    return res
 
 
