@@ -28,7 +28,7 @@ scheduler = APScheduler()
 
 @scheduler.task('interval', id='do_job_1', seconds=10, misfire_grace_time=900)
 def Updateincident():
-    db = sqlite3.connect('app/db/sqlite.db')
+    db = sqlite3.connect("app/db/sqlite.db")
     db.text_factory = str
     cursor = db.cursor()
     url = 'https://road.ioi.tw/?t=t1'
