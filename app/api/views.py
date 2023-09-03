@@ -167,7 +167,7 @@ def oil():
     print(res)
     return json.dumps(res, indent=4, ensure_ascii=False)
 
-@api_bp.route("/wheather")
+@api_bp.route("/weather")
 def weather():
     url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-061?Authorization=CWB-9451F1F8-364F-48A5-AEF6-60F3ACEBC9D7'
 
