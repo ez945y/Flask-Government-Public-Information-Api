@@ -24,6 +24,7 @@ def city():
         insertCity(cursor,res)
         db.commit()
         value_list = selectCity(cursor)
+        cursor.close
         db.close()
         key_list = ['CityID', 'CityName', 'CityCode',
                   'City', 'CountryID', 'Version']
@@ -43,9 +44,10 @@ def cityRoad(roadname):
     url_City = 'https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=JSON'
     db = sqlite3.connect('app/db/sqlite.db')
     cursor = db.cursor()
-    value_list = cursor.execute(f"SELECT DISTINCT RoadID, RoadName FROM CityRoad where RoadName like '{roadname}%' AND substr(RoadID,7,1) = 'A'  ").fetchall()
-    data = [{'RaodId':i[0],"RoadName" : i[1]} for i in value_list]
     try:
+        value_list = cursor.execute(f"SELECT DISTINCT RoadID, RoadName FROM CityRoad where RoadName like '{roadname}%' AND substr(RoadID,7,1) = 'A'  ").fetchall()
+        data = [{'RaodId':i[0],"RoadName" : i[1]} for i in value_list]
+        cursor.close()
         db.close()
         return json.dumps(data, ensure_ascii = False)
     except Exception as e:
@@ -54,8 +56,8 @@ def cityRoad(roadname):
 
 @api_bp.route("/citySpeed/<roadid>")
 def citySpeed(roadid):
+    url_CityR = f"https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/VD/City/Taipei?%24select=VDID&%24filter=RoadID%20eq%20%27{roadid}%27&%24top=30&%24format=JSON"
     try:
-        url_CityR = f"https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/VD/City/Taipei?%24select=VDID&%24filter=RoadID%20eq%20%27{roadid}%27&%24top=30&%24format=JSON"
         data_response = getData(url_CityR)
         data_dic = json.loads(data_response.text)
         VDIDS = [i['VDID'] for i in data_dic['VDs']]
@@ -100,6 +102,7 @@ def serverspot():
         insertServerspot(cursor,res)
         db.commit()
         view = selectServerspot(cursor)
+        cursor.close()
         db.close()
         return json.dumps(view, ensure_ascii=False)
     except Exception as e:
@@ -119,6 +122,7 @@ def Incident():
         for item in value_list:
             view.append(dict(zip(key_list, item)))
         #return make_response(jsonify(view))
+        cursor.close()
         db.close()
         return json.dumps(view, indent=4, ensure_ascii=False)
     except:
@@ -137,15 +141,13 @@ def Parking():
         view = []
         for item in value_list:
             view.append(dict(zip(key_list, item)))
+        cursor.close()
         db.close()
         return json.dumps(view, ensure_ascii = False)
     except Exception as e:
         print(e)
         return {"code":404}
 
-@api_bp.route("/pp")
-def pp():
-    return {"code":404}
 @api_bp.route("/oil")
 def oil():
     url= "https://www.cpc.com.tw/historyprice.aspx?n=2890"
@@ -200,3 +202,19 @@ def weather():
     return json.dumps(res, indent=4, ensure_ascii=False)
 
 
+@api_bp.route("/camera")
+def Camera():
+    db = sqlite3.connect('app/db/sqlite.db')
+    cursor = db.cursor()
+    try:
+        value_list = cursor.execute(f"SELECT * FROM SpeedCamera").fetchall()
+        key_list = ["ID", "Type","Road","Introduction","Session","Direction","Limit","Latitude", "Longitude"]
+        view = []
+        for item in value_list:
+            view.append(dict(zip(key_list, item)))
+        cursor.close()
+        db.close()
+        return json.dumps(view, ensure_ascii = False)
+    except Exception as e:
+        print(e)
+        return {"code":404}

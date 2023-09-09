@@ -31,7 +31,7 @@ def Updateincident():
     db = sqlite3.connect("app/db/sqlite.db")
     db.text_factory = str
     cursor = db.cursor()
-    url = 'https://road.ioi.tw/?t=t1'
+    url = "https://road.ioi.tw/?t=t1"
     page = urllib.request.urlopen(url)
     res = []
     soup = BeautifulSoup(page.read(), "html.parser")

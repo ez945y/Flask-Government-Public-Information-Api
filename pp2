@@ -1,0 +1,171 @@
+package appium.pages
+
+import io.appium.java_client.android.AndroidDriver
+import org.openqa.selenium.By
+import org.openqa.selenium.WebElement
+
+class MessagePage(driver: AndroidDriver): BasePage(driver){
+
+    object MoreDict{
+        val img = "傳圖片"
+        val video = "傳影片"
+        val take_photo = "拍張照"
+        val record_video = "錄影片"
+        val call = "免費電話"
+        val talk = "錄語音"
+        val file = "傳檔案"
+        val loc = "傳位置"
+        val gift = "送禮物"
+        val video_call = "視訊"
+        val pay = "付款"
+        val send_money = "發紅包"
+    }
+    object SelectDict{
+        val cite = "引用訊息"
+        val forward = "轉寄"
+        val share = "分享"
+        val withdraw = "回收"
+        val delete = "刪除"
+    }
+    private val findMore = By.id("com.mplusapp:id/btn_attach")
+    private val findSetting = By.id("com.mplusapp:id/btn_setting")
+    private val findEmotion = By.id("com.mplusapp:id/btn_emoticon")
+    private val findEmoji = By.id("com.mplusapp:id/btEmoji")
+    private val findSticker = By.id("com.mplusapp:id/btSticker")
+    private val findRecyclerView = By.id("com.mplusapp:id/content_panel")
+    private val findImageView = By.className("android.widget.ImageView")
+    private val findReject1 = By.xpath("//*[@text='不允許']")
+    private val findReject2 = By.xpath("//*[@text='以後再說']")
+    private val findContent = By.id("com.mplusapp:id/contentLayout")
+    private val findTime = By.id("com.mplusapp:id/msgTime")
+    private val findTitle = By.id("com.mplusapp:id/title")
+    private val messageEdit = By.id("com.mplusapp:id/edit")
+    private val messageSend = By.id("com.mplusapp:id/btn_send")
+    private val status = By.id("com.mplusapp:id/msgStatus")
+    private val edit = By.id("com.mplusapp:id/btn_edit")
+    private val chooseFriend = By.id("com.mplusapp:id/btn_choose_friend")
+    private val filter = By.id("com.mplusapp:id/list_filter")
+    private val unBlock = By.id("com.mplusapp:id/btn_unblock")
+    private val photo = By.id("com.mplusapp:id/photoImage")
+    private val send = By.id("com.mplusapp:id/sendButton")
+    private val confirm:By = By.id("android:id/button1")
+    private val forward = By.xpath("//*[@text='轉寄(1)']")
+    private val delete = By.xpath("//*[@text='刪除(1)']")
+
+    fun findMsgPerson(name:String) {
+        clickElement((By.xpath("//*[@text='$name']")))
+    }
+
+    fun findMore(opt:String) {
+        clickElement(findMore)
+        clickElement((By.xpath("//*[@text='$opt']")))
+    }
+
+    fun sendMessage(input:String){
+        inputElement(messageEdit, input)
+        clickElement(messageSend)
+    }
+    fun checkLastMessage():String?{
+        val last = findElements(status)
+        return last?.get(last?.count()?.minus(1))?.text
+    }
+    fun sendPhoto(){
+        findMore(MoreDict.img)
+        selectMedia()
+    }
+    fun sendVideo(){
+        findMore(MoreDict.video)
+        selectMedia()
+    }
+    private fun selectMedia(){
+        clickElements(photo, 0)
+        clickElements(photo, 0)
+        clickElement(send)
+    }
+    fun withdrawMessage(){
+        selectFunction(SelectDict.withdraw)
+        clickElement(confirm)
+        //超過時間需處理
+    }
+    fun shareMessage(){
+        selectFunction(SelectDict.share)
+    }
+    fun forwardMessage(){
+        selectFunction(SelectDict.forward)
+        clickElement(forward)
+    }
+    fun citeMessage(){
+        selectFunction(SelectDict.cite)
+        inputElement(messageEdit, "引用訊息")
+        clickElement(messageSend)
+    }
+    fun deleteMessage(){
+        selectFunction(SelectDict.delete)
+        clickElement(delete)
+        clickElement(confirm)
+    }
+    private fun selectFunction(func:String){
+        val contents = findElements(findContent)!!
+        //longPress(contents[contents.size - 1].findElement(By.id("com.mplusapp:id/textMeArea")))
+        longPress(contents[contents.size - 1].findElements(By.xpath("//android.widget.RelativeLayout/android.widget.LinearLayout[1]/following-sibling::*"))[0])
+        clickElement(By.xpath("//*[@text='$func']"))
+    }
+
+    fun getContent():String {
+        val contents = findElements(findContent)!!
+        return contents[contents.size - 1].findElement(findTime).text
+    }
+    fun block(){
+        clickElement(findSetting)
+        clickElement(By.xpath("//*[@text='封鎖好友']"))
+        clickElement(findMore)
+    }
+    fun unBlock(){
+        clickElement(unBlock)
+    }
+
+    fun isBlock(): Boolean {
+        return findElement(unBlock) != null
+    }
+
+    fun isUnBlock(): Boolean {
+        sleepTime(1000)
+        return findElement(By.xpath("//*[@text='已解除封鎖']")) != null
+    }
+
+    fun chooseEmoji(times:Int, position:Int){
+        findElement(findRecyclerView)!!.findElements(findImageView)[position]
+    }
+
+    fun chooseSticker(times:Int=1, position:Int=0) {
+
+        clickElement(findEmotion)
+        clickElement(findSticker)
+        val recycle = findElement(findRecyclerView)
+        var a : WebElement?
+        var b : WebElement?
+        b = recycle!!.findElements(findImageView)[0]
+        while(b == null){
+            Thread.sleep(2000)
+            b = recycle!!.findElements(findImageView)[0]
+        }
+        for (i in 0 until times) {
+            a = recycle!!.findElements(findImageView)[3]
+            b = recycle!!.findElements(findImageView)[0]
+            swipeElement(
+                a!!.location.x,
+                a!!.location.y,
+                b!!.location.x,
+                a!!.location.y
+            )
+        }
+
+        findElement(findRecyclerView)!!.findElements(findImageView)[position].click()
+        clickElement((By.id("com.mplusapp:id/preview_bottom_panel")))
+    }
+
+    fun getContext(): String {
+        return findElement(findTitle)!!.text
+    }
+
+}
