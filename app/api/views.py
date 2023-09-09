@@ -46,7 +46,7 @@ def cityRoad(roadname):
     cursor = db.cursor()
     try:
         value_list = cursor.execute(f"SELECT DISTINCT RoadID, RoadName FROM CityRoad where RoadName like '{roadname}%' AND substr(RoadID,7,1) = 'A'  ").fetchall()
-        data = [{'RaodId':i[0],"RoadName" : i[1]} for i in value_list]
+        data = [{'RoadId':i[0],"RoadName" : i[1]} for i in value_list]
         cursor.close()
         db.close()
         return json.dumps(data, ensure_ascii = False)
@@ -202,8 +202,25 @@ def weather():
     return json.dumps(res, indent=4, ensure_ascii=False)
 
 
-@api_bp.route("/camera")
-def Camera():
+@api_bp.route("/cameraTest")
+def CameraTest():
+    db = sqlite3.connect('app/db/sqlite.db')
+    cursor = db.cursor()
+    try:
+        value_list = cursor.execute(f"SELECT * FROM SpeedCamera").fetchall()
+        key_list = ["ID", "Type","Road","Introduction","Session","Direction","Limit","Latitude", "Longitude"]
+        view = []
+        for item in value_list:
+            view.append(dict(zip(key_list, item)))
+        cursor.close()
+        db.close()
+        return json.dumps(view, ensure_ascii = False)
+    except Exception as e:
+        print(e)
+        return {"code":404}
+
+@api_bp.route("/cameraMark")
+def CameraMark():
     db = sqlite3.connect('app/db/sqlite.db')
     cursor = db.cursor()
     try:
