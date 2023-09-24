@@ -12,6 +12,8 @@ bs4 = "*"
 pandas = "*"
 python-dotenv = "*"
 selenium = "*"
+numpy = "*"
+scipy = "*"
 
 [dev-packages]
 

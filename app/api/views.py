@@ -2,13 +2,16 @@
 from flask import Flask, jsonify, make_response
 from collections import defaultdict
 import requests
+import urllib.request
+from bs4 import BeautifulSoup
 import json
 import sqlite3
 from . import api_bp
 from .comm import *
 from app.db import *
 import re
-
+from numpy import sin, cos, arccos, pi, round
+from scipy.spatial import KDTree
 
 @api_bp.route("/city")
 def city():
@@ -235,3 +238,150 @@ def CameraMark():
     except Exception as e:
         print(e)
         return {"code":404}
+
+@api_bp.route("/weatherLocation/<latitude>,<logitude>")
+def weatherLocation(latitude,logitude):
+    url = f'https://maps.googleapis.com/maps/api/geocode/json?latlng={latitude},{logitude}&key=AIzaSyDRjDWqLgUb2xrIOzhKNixOOLbn249kAto&language=zh-TW'
+
+    data = requests.get(url)   # 取得 JSON 檔案的內容為文字
+    data_json = data.json()
+    res = data_json['results'][0]['address_components'][3]['short_name']
+    return json.dumps({'district':res}, indent=4, ensure_ascii=False)
+
+@api_bp.route("/RoadShoulder")
+def RoadShoulder():
+    db = sqlite3.connect('app/db/sqlite.db')
+    cursor = db.cursor()
+    weekday = datetime.today().weekday()
+    try:
+        if(weekday != 6 & weekday != 7):
+            if(weekday == 5):
+                lis = cursor.execute("""select Route,RoadSection,Milage,"Opentimes1(Weekday)","Opentimes2(Weekday)","Opentimes(Fridayonly)",SpeedLimit from RoadShoulder where "Opentimes1(Weekday)" IS NOT NULL OR "Opentimes2(Weekday)" IS NOT NULL OR "Opentimes(Fridayonly)" IS NOT NULL""").fetchall()
+                key_list = ["Route","RoadSection","RoadSection","Milage","Opentimes1(Weekday)","Opentimes2(Weekday)","Opentimes(Fridayonly)","SpeedLimit"]
+                list = []
+                for item in lis:
+                    list.append(dict(zip(key_list,item)))
+            else:
+                lis = cursor.execute("""select Route,RoadSection,Milage,"Opentimes1(Weekday)","Opentimes2(Weekday)" ,SpeedLimit from RoadShoulder where "Opentimes1(Weekday)" IS NOT NULL OR "Opentimes2(Weekday)" IS NOT NULL""").fetchall()
+                key_list = ["Route","RoadSection","RoadSection","Milage","Opentimes1(Weekday)","Opentimes2(Weekday)","SpeedLimit"]
+                list = []
+                for item in lis:
+                    list.append(dict(zip(key_list,item)))
+        else:
+            lis = cursor.execute("""select Route,RoadSection,Milage,"Opentimes1(Weekend)","Opentimes2(Weekend)",SpeedLimit from RoadShoulder where "Opentimes1(Weekend)" IS NOT NULL OR "Opentimes2(Weekend)" IS NOT NULL""").fetchall()
+            key_list = ["Route","RoadSection","RoadSection","Milage","Opentimes1(Weekend)","Opentimes2(Weekend)","SpeedLimit"]
+            list = []
+            for item in lis:
+                list.append(dict(zip(key_list,item)))
+        cursor.close()
+        db.close()
+        print(lis)
+        return json.dumps(list, ensure_ascii = False)
+    except Exception as e:
+        print(e)
+        return{"code":404}
+
+@api_bp.route("/oilStation")
+def oilStation():
+    db = sqlite3.connect('app/db/sqlite.db')
+    cursor = db.cursor()
+    try:
+        value_list = cursor.execute("select * from OilStation").fetchall()
+        key_list = ["Station", "Address","Longitude","Latitude" ]
+        view = []
+        for item in value_list:
+            view.append(dict(zip(key_list, item)))
+        cursor.close()
+        db.close()
+        return json.dumps(view, ensure_ascii = False)
+    except Exception as e:
+        print(e)
+        return {"code":404}
+
+@api_bp.route("/cctv")
+def cctv():
+    res = []
+    direct = ['songshan','xinyi','daan','zhongshan','zhongzheng','datong','wanhua','wenshan','nangang','neihu','shilin','beitou']
+    for sector in direct:
+        url = f"https://tw.live/city/taipeicity/{sector}/"
+        headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
+        request = urllib.request.Request(url = url, headers = headers, method = 'GET')
+
+        response = urllib.request.urlopen(request)
+
+        content = response.read()
+
+        soup = BeautifulSoup(content, "html.parser")
+        txt = soup.findAll('div', {'class' : 'cctv-stack'})
+        for t in txt:
+            res.append(t.find('p').text)
+    return res
+
+def rad2deg(radians):
+    degrees = radians * 180 / pi
+    return degrees
+
+def deg2rad(degrees):
+    radians = degrees * pi / 180
+    return radians
+
+def getDistanceBetweenPointsNew(latitude1, longitude1, latitude2, longitude2, unit = 'kilometers'):
+    
+    theta = longitude1 - longitude2
+    print(longitude1)
+    print(longitude2)
+    distance = 60 * 1.1515 * rad2deg(
+        arccos(
+            (sin(deg2rad(latitude1)) * sin(deg2rad(latitude2))) + 
+            (cos(deg2rad(latitude1)) * cos(deg2rad(latitude2)) * cos(deg2rad(theta)))
+        )
+    )
+    
+    if unit == 'miles':
+        return round(distance, 2)
+    if unit == 'kilometers':
+        return round(distance * 1.609344, 2)
+
+class CAMERA:
+    def __init__(self, ID, latitude, longitude):
+        self.ID = ID
+        self.latitude = latitude
+        self.longitude = longitude
+
+def fetch_camera_data():
+    db = sqlite3.connect('app/db/sqlite.db')
+    cursor = db.cursor()
+    query = "SELECT ROADID, latitude, longitude from SpeedCamera"
+    cursor.execute(query)
+    camera_data = cursor.fetchall()
+    cameras = []
+
+    for data in camera_data:
+        camera = CAMERA(data[0], data[1], data[2])
+        cameras.append(camera)
+
+    db.close()
+    return cameras
+
+@api_bp.route("/findCamera/<float:latitude>,<float:longitude>")
+def findCamera(latitude, longitude):
+
+    camera_data = fetch_camera_data()
+    coordinates = [(camera.longitude, camera.latitude) for camera in camera_data]
+    kdtree = KDTree(coordinates)
+    nearest_distance, nearest_camera_index = kdtree.query((longitude, latitude))
+    nearest_camera = camera_data[nearest_camera_index]
+
+    distance = getDistanceBetweenPointsNew(latitude, longitude,nearest_camera.latitude,nearest_camera.longitude) * 1000
+    if(distance <= 300 and (abs(latitude-latitude )<0.0005 or abs(longitude-longitude)<0.0005)):
+        with sqlite3.connect('app/db/sqlite.db') as db:
+            cursor = db.cursor()
+            cid = nearest_camera.ID
+            query = f"SELECT * from SpeedCamera WHERE ROADID = {cid}"
+            value_list = list(cursor.execute(query).fetchone())
+            value_list.append(distance)
+            print(value_list)
+        key_list = ["ID", "Type","Road","Introduction","Session","Direction","Limit","Latitude", "Longitude","Distance"]
+        return dict(zip(key_list, value_list))
+    else:
+        return "YES"
