@@ -12,7 +12,12 @@ from app.db import *
 import re
 from numpy import sin, cos, arccos, pi, round
 from scipy.spatial import KDTree
+import os
 
+@api_bp.route("/")
+def index():
+    return "Hello"
+    
 @api_bp.route("/city")
 def city():
     url_City = 'https://tdx.transportdata.tw/api/basic/v2/Basic/City?%24format=JSON'
@@ -241,7 +246,8 @@ def CameraMark():
 
 @api_bp.route("/weatherLocation/<latitude>,<logitude>")
 def weatherLocation(latitude,logitude):
-    url = f'https://maps.googleapis.com/maps/api/geocode/json?latlng={latitude},{logitude}&key=AIzaSyDRjDWqLgUb2xrIOzhKNixOOLbn249kAto&language=zh-TW'
+    token = os.getenv("GoogleToken")
+    url = f'https://maps.googleapis.com/maps/api/geocode/json?latlng={latitude},{logitude}&key={token}&language=zh-TW'
 
     data = requests.get(url)   # 取得 JSON 檔案的內容為文字
     data_json = data.json()
