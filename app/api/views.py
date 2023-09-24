@@ -390,4 +390,4 @@ def findCamera(latitude, longitude):
         key_list = ["ID", "Type","Road","Introduction","Session","Direction","Limit","Latitude", "Longitude","Distance"]
         return dict(zip(key_list, value_list))
     else:
-        return "YES"
+        return {"ID":"0", "Type":"0","Road":"0","Introduction":"0","Session":"0","Direction":"0","Limit":"0","Latitude":"0.0", "Longitude":"0.0","Distance":1000}
