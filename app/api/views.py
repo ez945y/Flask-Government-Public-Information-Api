@@ -185,14 +185,14 @@ def weather():
 
     res = []
     data_json = data.json()    # 轉換成 JSON 格式
-    prohibit = ["WeatherDescription","PoP6h","AT","CI","RH","WD","WS","Td"]
+    prohibit = ["WeatherDescription","PoP12h","AT","CI","RH","WD","WS","Td"]
     for record in  data_json['records']['locations'][0]["location"]:
         mdic = {}
         mdic["locationName"] = record["locationName"]
         for w in record["weatherElement"]:
             if w["elementName"] in prohibit:continue
             for idx, p in enumerate(w["time"]):
-                if idx >=4 and w["elementName"] == "PoP12h":break
+                if idx >=4 and w["elementName"] == "PoP6h":break
                 if idx >=8 and w["elementName"] == "Wx":break
                 if idx >=8 and w["elementName"]=="AT":break
                 if idx >=8 and w["elementName"]=="T":break
