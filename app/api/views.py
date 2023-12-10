@@ -377,14 +377,14 @@ def findCamera(latitude, longitude):
     kdtree = KDTree(coordinates)
     nearest_distance, nearest_camera_index = kdtree.query((longitude, latitude))
     nearest_camera = camera_data[nearest_camera_index]
-
-    distance = getDistanceBetweenPointsNew(latitude, longitude,nearest_camera.latitude,nearest_camera.longitude) * 1000
-    if(distance <= 300 and (abs(latitude-latitude )<0.0005 or abs(longitude-longitude)<0.0005)):
+    distance = getDistanceBetweenPointsNew(latitude, longitude,float(nearest_camera.latitude),float(nearest_camera.longitude)) * 1000
+    if(distance>0.0 and distance <= 300 and (abs(latitude-latitude )<0.0005 or abs(longitude-longitude)<0.0005)):
         with sqlite3.connect('app/db/sqlite.db') as db:
             cursor = db.cursor()
             cid = nearest_camera.ID
-            query = f"SELECT * from SpeedCamera WHERE ROADID = {cid}"
-            value_list = list(cursor.execute(query).fetchone())
+            query = f"SELECT * from SpeedCamera WHERE ROADID = '{cid}'"
+            c = cursor.execute(query).fetchone()
+            value_list = list(c)
             value_list.append(distance)
             print(value_list)
         key_list = ["ID", "Type","Road","Introduction","Session","Direction","Limit","Latitude", "Longitude","Distance"]
