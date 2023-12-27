@@ -391,3 +391,20 @@ def findCamera(latitude, longitude):
         return dict(zip(key_list, value_list))
     else:
         return {"ID":"0", "Type":"0","Road":"0","Introduction":"0","Session":"0","Direction":"0","Limit":"0","Latitude":"0.0", "Longitude":"0.0","Distance":1000}
+
+@api_bp.route("/createMessage")
+def init_db():
+    conn = sqlite3.connect('app/db/sqlite.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Messages (
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            City TEXT,
+            Road TEXT,
+            Author TEXT,
+            Message TEXT,
+            Time TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()

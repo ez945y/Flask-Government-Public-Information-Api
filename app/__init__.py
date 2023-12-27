@@ -12,6 +12,7 @@ import sqlite3
 from .config import Config
 from .db import *
 from .api import api_bp
+from flask_restful import Resource, Api, reqparse
 
 def create_app(test_config=None ):
     app = Flask(__name__)
@@ -20,7 +21,9 @@ def create_app(test_config=None ):
     scheduler.init_app(app)
     scheduler.start()
     app.register_blueprint(api_bp)
-
+    api = Api(app)
+    api.add_resource(MessageList, '/messages')
+    api.add_resource(Message, '/messages/<int:message_id>')
     return app
 
 
@@ -61,6 +64,106 @@ def Updateincident():
             res.append(new)
         cursor.executemany("INSERT INTO Incident VALUES(?, ?, ?, ?, ?, ?, ?)", res)
         db.commit()
+
+def get_db_connection():
+    conn = sqlite3.connect('app/db/sqlite.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+class MessageList(Resource):
+    def get(self):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = "SELECT * FROM Messages ORDER BY Time DESC"
+        messages = cursor.execute(query).fetchall()
+
+        conn.close()
+
+        # 將每條留言轉換為字典並構建列表
+        message_list = []
+        for message in messages:
+            message_dict = {
+                'id': message['ID'],
+                'city': message['City'],
+                'road': message['Road'],
+                'author': message['Author'],
+                'message': message['Message'],
+                'time': message['Time']
+            }
+            message_list.append(message_dict)
+
+        # 直接返回包含留言字典的列表
+        return message_list
+
+class Message(Resource):
+    def get(self, message_id):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = "SELECT * FROM Messages WHERE ID = ?"
+        message = cursor.execute(query, (message_id,)).fetchone()
+
+        conn.close()
+
+        if message:
+            return {'message': dict(message)}
+        else:
+            return {'message': None}, 404
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('City', required=True)
+        parser.add_argument('Road', required=True)
+        parser.add_argument('Author', required=True)
+        parser.add_argument('Message', required=True)
+        parser.add_argument('Time', required=True)
+        args = parser.parse_args()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = "INSERT INTO Messages (City, Road, Author, Message, Time) VALUES (?, ?, ?, ?, ?)"
+        cursor.execute(query, (args['City'], args['Road'], args['Author'], args['Message'], args['Time']))
+        conn.commit()
+
+        conn.close()
+
+        return {'message': 'Message created successfully.'}, 201
+
+    def put(self, message_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('City')
+        parser.add_argument('Road')
+        parser.add_argument('Author')
+        parser.add_argument('Message')
+        parser.add_argument('Time')
+        args = parser.parse_args()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = "UPDATE Messages SET City = ?, Road = ?, Author = ?, Message = ?, Time = ? WHERE ID = ?"
+        cursor.execute(query, (args['City'], args['Road'], args['Author'], args['Message'], args['Time'], message_id))
+        conn.commit()
+
+        conn.close()
+
+        return {'message': 'Message updated successfully.'}
+
+    def delete(self, message_id):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = "DELETE FROM Messages WHERE ID = ?"
+        cursor.execute(query, (message_id,))
+        conn.commit()
+
+        conn.close()
+
+        return {'message': 'Message deleted successfully.'}
+
+
 
 
             
