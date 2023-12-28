@@ -124,7 +124,7 @@ class Message(Resource):
         cursor = conn.cursor()
 
         query = "INSERT INTO Messages (City, Road, Author, Message, Time) VALUES (?, ?, ?, ?, ?)"
-        cursor.execute(query, (args['City'], args['Road'], args['Author'], args['Message'], args['Time']))
+        cursor.execute(query, (args['city'], args['road'], args['author'], args['message'], args['time']))
         conn.commit()
 
         conn.close()
@@ -144,7 +144,7 @@ class Message(Resource):
         cursor = conn.cursor()
 
         query = "UPDATE Messages SET City = ?, Road = ?, Author = ?, Message = ?, Time = ? WHERE ID = ?"
-        cursor.execute(query, (args['City'], args['Road'], args['Author'], args['Message'], args['Time'], message_id))
+        cursor.execute(query, (args['city'], args['road'], args['author'], args['message'], args['time'], message_id))
         conn.commit()
 
         conn.close()
