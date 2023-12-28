@@ -113,11 +113,11 @@ class Message(Resource):
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('City', required=True)
-        parser.add_argument('Road', required=True)
-        parser.add_argument('Author', required=True)
-        parser.add_argument('Message', required=True)
-        parser.add_argument('Time', required=True)
+        parser.add_argument('city', required=True)
+        parser.add_argument('road', required=True)
+        parser.add_argument('author', required=True)
+        parser.add_argument('message', required=True)
+        parser.add_argument('time', required=True)
         args = parser.parse_args()
 
         conn = get_db_connection()
@@ -133,11 +133,11 @@ class Message(Resource):
 
     def put(self, message_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('City')
-        parser.add_argument('Road')
-        parser.add_argument('Author')
-        parser.add_argument('Message')
-        parser.add_argument('Time')
+        parser.add_argument('city', required=True)
+        parser.add_argument('road', required=True)
+        parser.add_argument('author', required=True)
+        parser.add_argument('message', required=True)
+        parser.add_argument('time', required=True)
         args = parser.parse_args()
 
         conn = get_db_connection()
