@@ -14,6 +14,9 @@ python-dotenv = "*"
 selenium = "*"
 numpy = "*"
 scipy = "*"
+flask-socketio = "*"
+eventlet = "*"
+flask-restful = "*"
 
 [dev-packages]
 
