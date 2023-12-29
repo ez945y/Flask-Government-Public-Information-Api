@@ -22,8 +22,8 @@ def create_app(test_config=None ):
     scheduler.start()
     app.register_blueprint(api_bp)
     api = Api(app)
-    api.add_resource(MessageList, '/messages')
-    api.add_resource(Message, '/messages/<int:message_id>')
+    api.add_resource(MessageList, '/messageList')
+    api.add_resource(Message, '/message/<int:message_id>')
     return app
 
 
@@ -119,7 +119,7 @@ class Message(Resource):
         parser.add_argument('message', required=True)
         parser.add_argument('time', required=True)
         args = parser.parse_args()
-
+        print(args)
         conn = get_db_connection()
         cursor = conn.cursor()
 
