@@ -24,6 +24,8 @@ def create_app(test_config=None ):
     api = Api(app)
     api.add_resource(MessageList, '/messageList')
     api.add_resource(Message, '/message/<int:message_id>')
+    api.add_resource(NewMessage, '/newMessage')
+    
     return app
 
 
@@ -111,26 +113,6 @@ class Message(Resource):
         else:
             return {'message': None}, 404
 
-    def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('city', required=True)
-        parser.add_argument('road', required=True)
-        parser.add_argument('author', required=True)
-        parser.add_argument('message', required=True)
-        parser.add_argument('time', required=True)
-        args = parser.parse_args()
-        print(args)
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        query = "INSERT INTO Messages (City, Road, Author, Message, Time) VALUES (?, ?, ?, ?, ?)"
-        cursor.execute(query, (args['city'], args['road'], args['author'], args['message'], args['time']))
-        conn.commit()
-
-        conn.close()
-
-        return {'message': 'Message created successfully.'}, 201
-
     def put(self, message_id):
         parser = reqparse.RequestParser()
         parser.add_argument('city', required=True)
@@ -164,6 +146,23 @@ class Message(Resource):
         return {'message': 'Message deleted successfully.'}
 
 
+class NewMessage(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('city', required=True)
+        parser.add_argument('road', required=True)
+        parser.add_argument('author', required=True)
+        parser.add_argument('message', required=True)
+        parser.add_argument('time', required=True)
+        args = parser.parse_args()
+        print(args)
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
+        query = "INSERT INTO Messages (City, Road, Author, Message, Time) VALUES (?, ?, ?, ?, ?)"
+        cursor.execute(query, (args['city'], args['road'], args['author'], args['message'], args['time']))
+        conn.commit()
 
-            
+        conn.close()
+
+        return {'message': 'Message created successfully.'}, 201
